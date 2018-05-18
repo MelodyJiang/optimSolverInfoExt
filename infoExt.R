@@ -185,3 +185,12 @@ ext_info <- function(test, solver, problemType)
   
   return(result.df)
 }
+
+netlib_clp_result <- ext_info("clp-test1-2.txt", "clp", "lp")
+miplib_cbc_result <- ext_info("cbc-mip.txt", "cbc", "mip")
+netlib_cplex_result <- ext_info("cplex-test1_2.txt", "cplex", "lp")
+miplib_cplex_result <- ext_info("cplex-mip.txt", "cplex", "mip")
+netlib_glpk_result <- ext_info("glpk-test1.txt", "glpk", "lp")
+miplib_glpk_result <- ext_info("glpk-mip.txt", "glpk", "mip")
+netlib_lpsolve_result <- ext_info("lpsolve-netlib.txt", "lpsolve", "lp")
+
