@@ -14,10 +14,10 @@ getNameList <- function(mypath, filename)
   return(namelist)
 }
 
-lpList <- getNameList("F:\\testproblems\\test1\\MPS", "lp_namelist.txt")
-mipList <- getNameList("F:\\testproblems\\miplib2010_51", "mip_namelist.txt")
+lpList <- getNameList("G:\\testproblems\\test1\\MPS", "lp_namelist.txt")
+mipList <- getNameList("G:\\testproblems\\miplib2010_51", "mip_namelist.txt")
 
-setwd("F:\\Result")
+setwd("G:\\Result")
 
 ####This function is for extracting information from .txt file####
 #argurments: .txt file name, solver name, problem type (lp or mip)
@@ -187,7 +187,7 @@ ext_info <- function(test, solver, problemType)
 }
 
 netlib_clp_result <- ext_info("clp-test1-2.txt", "clp", "lp")
-miplib_cbc_result <- ext_info("cbc-mip.txt", "cbc", "mip")
+miplib_cbc_result <- ext_info("cbc-1h.txt.txt", "cbc", "mip")
 netlib_cplex_result <- ext_info("cplex-test1_2.txt", "cplex", "lp")
 miplib_cplex_result <- ext_info("cplex-mip.txt", "cplex", "mip")
 netlib_glpk_result <- ext_info("glpk-test1.txt", "glpk", "lp")
