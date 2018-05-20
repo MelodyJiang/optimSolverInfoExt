@@ -187,10 +187,60 @@ ext_info <- function(test, solver, problemType)
 }
 
 netlib_clp_result <- ext_info("clp-test1-2.txt", "clp", "lp")
-miplib_cbc_result <- ext_info("cbc-1h.txt.txt", "cbc", "mip")
+miplib_cbc_result <- ext_info("cbc-1h.txt", "cbc", "mip")
 netlib_cplex_result <- ext_info("cplex-test1_2.txt", "cplex", "lp")
 miplib_cplex_result <- ext_info("cplex-mip.txt", "cplex", "mip")
 netlib_glpk_result <- ext_info("glpk-test1.txt", "glpk", "lp")
 miplib_glpk_result <- ext_info("glpk-mip.txt", "glpk", "mip")
 netlib_lpsolve_result <- ext_info("lpsolve-netlib.txt", "lpsolve", "lp")
+
+####This function is tocombine results and generate dataframes####
+#Name:problem name
+#Constraints:number of constraints
+#Variables:number of variables
+#clp_time
+#cplex_time
+#glpk_time
+#Obj:objective
+
+netList <- mget(ls(pattern =  "^netlib"))
+mipList <- mget(ls(pattern = "^miplib"))
+
+compareResult <- function(mylist) {
+  n <- length(mylist)
+  mydf <- merge(mylist[[1]], mylist[[2]], by = "Name", all.x = TRUE)
+  for (i in 3:n) {
+    mydf <- merge(mydf, mylist[[i]], by = "Name", all.x = TRUE)
+    
+  }
+  return(mydf)
+}
+
+compareNet <- compareResult(netList)
+compareNet <- compareNet[c(1:4,6,8,10,5,7,9,11)]
+compareMip <- compareResult(mipList)
+compareMip <- compareMip[c(1:4, 6, 8,5, 7,9)]
+
+
+
+
+
+
+write.csv(compareNet, "lpresults.csv")
+write.csv(compareMip,"mipresults2.csv")
+
+####This is to generate df for plotly####
+
+netplot <- compareNet[,1:3]
+netplot <- do.call("rbind", replicate(4, netplot, simplify = FALSE))
+netplot$comptim <- c(compareNet$clp_time, compareNet$cplex_time, compareNet$glpk_time, compareNet$lpsolve_time)
+netplot$solver <- c(rep("clp", 112), rep("cplex", 112), rep("glpk", 112), rep("lpsolve", 112))
+
+mipplot <- compareMip[,1:3]
+mipplot <- do.call("rbind", replicate(3, mipplot, simplify = FALSE))
+mipplot$comptim <- c(compareMip$cbc_time, compareMip$cplex_time, compareMip$glpk_time)
+mipplot$solver <- c(rep("cbc", 51), rep("cplex", 51), rep("glpk", 51))
+
+
+
 
