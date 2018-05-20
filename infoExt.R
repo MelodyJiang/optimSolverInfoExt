@@ -171,15 +171,15 @@ ext_info <- function(test, solver, problemType)
     result.obj <- as.numeric(str_extract(result.obj, pattern = "(?<=:).*"))
     result.obj <- c(result.obj, "INFEASIBLE")
     result.info <- data.frame(Name = result.name, Constraints = result.cons, Variables = result.vars, stringsAsFactors = FALSE)
-    result.info[26,] <- c("n3seq24", 6044, 11985)
+    result.info <- result.info[-which(is.na(result.info)),]
+    #result.info[26,] <- c("n3seq24", 6044, 11985)
     result.solved.df <- data.frame(Name = result.solved,cbc_time = result.time,  cbc_obj = result.obj, stringsAsFactors = FALSE)
     result.df <- merge(result.info, result.solved.df, by = "Name", all.x = TRUE)
-    result.df$cbc_time[is.na(result.df$cbc_time)] <- 1200
+    result.df$cbc_time[is.na(result.df$cbc_time)] <- 3600
     result.df$cbc_obj[is.na(result.df$cbc_obj)] <- "Timeout"
     result.df$Name <- str_replace_all(result.df$Name, pattern=" ", repl="")
     result.df$Constraints <- as.numeric(result.df$Constraints)
     result.df$Variables <- as.numeric(result.df$Variables)
-    
     
   }
   
