@@ -241,6 +241,72 @@ mipplot <- do.call("rbind", replicate(3, mipplot, simplify = FALSE))
 mipplot$comptim <- c(compareMip$cbc_time, compareMip$cplex_time, compareMip$glpk_time)
 mipplot$solver <- c(rep("cbc", 51), rep("cplex", 51), rep("glpk", 51))
 
+####plot####
+library(ggplot2)
+library(plotly)
+
+#time gaginst constraints
+plot_ly(netplot, x = ~Constraints, y = ~comptim, 
+        color = ~solver, size = ~Variables,
+        type="scatter", mode = "markers", hoverinfo = 'text',
+        text = ~paste("Problem:", Name,
+                      '<br>Solver:', solver, 
+                      '<br>number of constraints:', Constraints,
+                      '<br>number of variables:', Variables,
+                      '<br>computation time:', comptim)) %>%
+  layout(title = "LP results",
+         xaxis = list(title = "number of constraints"),
+         yaxis = list(title  = "computation time (in sec)"),
+         legend = list(x = 100, y = 0.5)) %>%
+  add_lines(line = list(width =1))
+
+#time against variables
+plot_ly(netplot, x = ~Variables, y = ~comptim, 
+        color = ~solver, size = ~Constraints,
+        type="scatter", mode = "markers", hoverinfo = 'text',
+        text = ~paste("Problem:", Name,
+                      '<br>Solver:', solver, 
+                      '<br>number of constraints:', Constraints,
+                      '<br>number of variables:', Variables,
+                      '<br>computation time:', comptim)) %>%
+  layout(title = "LP results",
+         xaxis = list(title = "number of variables"),
+         yaxis = list(title  = "computation time (in sec)"),
+         legend = list(x = 100, y = 0.5)) %>%
+  add_lines(line = list(width =1))
+
+
+
+#time against constraints
+plot_ly(mipplot, x = ~Constraints, y = ~comptim, 
+        color = ~solver,  size = ~Variables,
+        type="scatter", mode = "markers", hoverinfo = 'text',
+        text = ~paste("Problem:", Name,
+                      '<br>Solver:', solver, 
+                      '<br>number of constraints:', Constraints,
+                      '<br>number of variables:', Variables,
+                      '<br>computation time:', comptim)) %>%
+  layout(title = "MIP results", 
+         xaxis = list(title = "number of constraints"),
+         yaxis = list(title = "computation time (in sec)"),
+         legend = list(x = 100, y = 0.5)) %>%
+  add_lines(line = list(width =1))
+
+#time against variables  
+plot_ly(mipplot, x = ~Variables, y = ~comptim, 
+        color = ~solver,  size = ~Constraints,
+        type="scatter", mode = "markers", hoverinfo = 'text',
+        text = ~paste("Problem:", Name,
+                      '<br>Solver:', solver, 
+                      '<br>number of constraints:', Constraints,
+                      '<br>number of variables:', Variables,
+                      '<br>computation time:', comptim)) %>%
+  layout(title = "MIP results", 
+         xaxis = list(title = "number of variables"),
+         yaxis = list(title = "computation time (in sec)"),
+         legend = list(x = 100, y = 0.5)) %>%
+  add_lines(line = list(width =1)) 
+
 
 
 
