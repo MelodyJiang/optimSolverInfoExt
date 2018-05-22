@@ -14,10 +14,10 @@ getNameList <- function(mypath, filename)
   return(namelist)
 }
 
-lpList <- getNameList("F:\\testproblems\\test1\\MPS", "lp_namelist.txt")
-mipList <- getNameList("F:\\testproblems\\miplib2010_51", "mip_namelist.txt")
+lpList <- getNameList("G:\\testproblems\\test1\\MPS", "lp_namelist.txt")
+mipList <- getNameList("G:\\testproblems\\miplib2010_51", "mip_namelist.txt")
 
-setwd("F:\\Result")
+setwd("G:\\Result")
 
 ####This function is for extracting information from .txt file####
 #argurments: .txt file name, solver name, problem type (lp or mip)
@@ -171,15 +171,15 @@ ext_info <- function(test, solver, problemType)
     result.obj <- as.numeric(str_extract(result.obj, pattern = "(?<=:).*"))
     result.obj <- c(result.obj, "INFEASIBLE")
     result.info <- data.frame(Name = result.name, Constraints = result.cons, Variables = result.vars, stringsAsFactors = FALSE)
-    result.info[26,] <- c("n3seq24", 6044, 11985)
+    result.info <- result.info[-which(is.na(result.info)),]
+    #result.info[26,] <- c("n3seq24", 6044, 11985)
     result.solved.df <- data.frame(Name = result.solved,cbc_time = result.time,  cbc_obj = result.obj, stringsAsFactors = FALSE)
     result.df <- merge(result.info, result.solved.df, by = "Name", all.x = TRUE)
-    result.df$cbc_time[is.na(result.df$cbc_time)] <- 1200
+    result.df$cbc_time[is.na(result.df$cbc_time)] <- 3600
     result.df$cbc_obj[is.na(result.df$cbc_obj)] <- "Timeout"
     result.df$Name <- str_replace_all(result.df$Name, pattern=" ", repl="")
     result.df$Constraints <- as.numeric(result.df$Constraints)
     result.df$Variables <- as.numeric(result.df$Variables)
-    
     
   }
   
@@ -187,10 +187,126 @@ ext_info <- function(test, solver, problemType)
 }
 
 netlib_clp_result <- ext_info("clp-test1-2.txt", "clp", "lp")
-miplib_cbc_result <- ext_info("cbc-mip.txt", "cbc", "mip")
+miplib_cbc_result <- ext_info("cbc-1h.txt", "cbc", "mip")
 netlib_cplex_result <- ext_info("cplex-test1_2.txt", "cplex", "lp")
 miplib_cplex_result <- ext_info("cplex-mip.txt", "cplex", "mip")
 netlib_glpk_result <- ext_info("glpk-test1.txt", "glpk", "lp")
 miplib_glpk_result <- ext_info("glpk-mip.txt", "glpk", "mip")
 netlib_lpsolve_result <- ext_info("lpsolve-netlib.txt", "lpsolve", "lp")
+
+####This function is tocombine results and generate dataframes####
+#Name:problem name
+#Constraints:number of constraints
+#Variables:number of variables
+#clp_time
+#cplex_time
+#glpk_time
+#Obj:objective
+
+netList <- mget(ls(pattern =  "^netlib"))
+mipList <- mget(ls(pattern = "^miplib"))
+
+compareResult <- function(mylist) {
+  n <- length(mylist)
+  mydf <- merge(mylist[[1]], mylist[[2]], by = "Name", all.x = TRUE)
+  for (i in 3:n) {
+    mydf <- merge(mydf, mylist[[i]], by = "Name", all.x = TRUE)
+    
+  }
+  return(mydf)
+}
+
+compareNet <- compareResult(netList)
+compareNet <- compareNet[c(1:4,6,8,10,5,7,9,11)]
+compareMip <- compareResult(mipList)
+compareMip <- compareMip[c(1:4, 6, 8,5, 7,9)]
+
+
+
+
+
+
+write.csv(compareNet, "lpresults.csv")
+write.csv(compareMip,"mipresults2.csv")
+
+####This is to generate df for plotly####
+
+netplot <- compareNet[,1:3]
+netplot <- do.call("rbind", replicate(4, netplot, simplify = FALSE))
+netplot$comptim <- c(compareNet$clp_time, compareNet$cplex_time, compareNet$glpk_time, compareNet$lpsolve_time)
+netplot$solver <- c(rep("clp", 112), rep("cplex", 112), rep("glpk", 112), rep("lpsolve", 112))
+
+mipplot <- compareMip[,1:3]
+mipplot <- do.call("rbind", replicate(3, mipplot, simplify = FALSE))
+mipplot$comptim <- c(compareMip$cbc_time, compareMip$cplex_time, compareMip$glpk_time)
+mipplot$solver <- c(rep("cbc", 51), rep("cplex", 51), rep("glpk", 51))
+
+####plot####
+library(ggplot2)
+library(plotly)
+
+#time gaginst constraints
+plot_ly(netplot, x = ~Constraints, y = ~comptim, 
+        color = ~solver, size = ~Variables,
+        type="scatter", mode = "markers", hoverinfo = 'text',
+        text = ~paste("Problem:", Name,
+                      '<br>Solver:', solver, 
+                      '<br>number of constraints:', Constraints,
+                      '<br>number of variables:', Variables,
+                      '<br>computation time:', comptim)) %>%
+  layout(title = "LP results",
+         xaxis = list(title = "number of constraints"),
+         yaxis = list(title  = "computation time (in sec)"),
+         legend = list(x = 100, y = 0.5)) %>%
+  add_lines(line = list(width =1))
+
+#time against variables
+plot_ly(netplot, x = ~Variables, y = ~comptim, 
+        color = ~solver, size = ~Constraints,
+        type="scatter", mode = "markers", hoverinfo = 'text',
+        text = ~paste("Problem:", Name,
+                      '<br>Solver:', solver, 
+                      '<br>number of constraints:', Constraints,
+                      '<br>number of variables:', Variables,
+                      '<br>computation time:', comptim)) %>%
+  layout(title = "LP results",
+         xaxis = list(title = "number of variables"),
+         yaxis = list(title  = "computation time (in sec)"),
+         legend = list(x = 100, y = 0.5)) %>%
+  add_lines(line = list(width =1))
+
+
+
+#time against constraints
+plot_ly(mipplot, x = ~Constraints, y = ~comptim, 
+        color = ~solver,  size = ~Variables,
+        type="scatter", mode = "markers", hoverinfo = 'text',
+        text = ~paste("Problem:", Name,
+                      '<br>Solver:', solver, 
+                      '<br>number of constraints:', Constraints,
+                      '<br>number of variables:', Variables,
+                      '<br>computation time:', comptim)) %>%
+  layout(title = "MIP results", 
+         xaxis = list(title = "number of constraints"),
+         yaxis = list(title = "computation time (in sec)"),
+         legend = list(x = 100, y = 0.5)) %>%
+  add_lines(line = list(width =1))
+
+#time against variables  
+plot_ly(mipplot, x = ~Variables, y = ~comptim, 
+        color = ~solver,  size = ~Constraints,
+        type="scatter", mode = "markers", hoverinfo = 'text',
+        text = ~paste("Problem:", Name,
+                      '<br>Solver:', solver, 
+                      '<br>number of constraints:', Constraints,
+                      '<br>number of variables:', Variables,
+                      '<br>computation time:', comptim)) %>%
+  layout(title = "MIP results", 
+         xaxis = list(title = "number of variables"),
+         yaxis = list(title = "computation time (in sec)"),
+         legend = list(x = 100, y = 0.5)) %>%
+  add_lines(line = list(width =1)) 
+
+
+
 
