@@ -1,9 +1,15 @@
 ##This is used to extract information form the output of several open-source optimization solvers
 
-#install.packages("stringr")
-#install.packages("stringi")
-library(stringr)
-library(stringi)
+#check if the two required packages are installed and then load them
+if(!require(stringr)){
+  install.packages("stringr")
+  library(stringr)
+}
+
+if(!require(stringi)){
+  install.packages("stringi")
+  library(stringi)
+}
 
 ####get the name list of the .mps files (in a data frame)####
 getNameList <- function(mypath, filename)
@@ -14,12 +20,13 @@ getNameList <- function(mypath, filename)
   return(namelist)
 }
 
+#read the .txt which contains the name list of the lp/mip problmes
 lpList <- getNameList("G:\\testproblems\\test1\\MPS", "lp_namelist.txt")
 mipList <- getNameList("G:\\testproblems\\miplib2010_51", "mip_namelist.txt")
 
 setwd("G:\\Result")
 
-####This function is for extracting information from .txt file####
+####This function is to extract information from .txt output file####
 #argurments: .txt file name, solver name, problem type (lp or mip)
 
 ext_info <- function(test, solver, problemType)
@@ -194,7 +201,7 @@ netlib_glpk_result <- ext_info("glpk-test1.txt", "glpk", "lp")
 miplib_glpk_result <- ext_info("glpk-mip.txt", "glpk", "mip")
 netlib_lpsolve_result <- ext_info("lpsolve-netlib.txt", "lpsolve", "lp")
 
-####This function is tocombine results and generate dataframes####
+####This function is to combine results and generate dataframes####
 #Name:problem name
 #Constraints:number of constraints
 #Variables:number of variables
@@ -220,11 +227,6 @@ compareNet <- compareResult(netList)
 compareNet <- compareNet[c(1:4,6,8,10,5,7,9,11)]
 compareMip <- compareResult(mipList)
 compareMip <- compareMip[c(1:4, 6, 8,5, 7,9)]
-
-
-
-
-
 
 write.csv(compareNet, "lpresults.csv")
 write.csv(compareMip,"mipresults2.csv")
